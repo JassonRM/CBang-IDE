@@ -1,30 +1,18 @@
 cmake_minimum_required(VERSION 3.5)
-
 project(CFactorial-IDE)
 
-# Find includes in corresponding build directories
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_PREFIX_PATH "/Applications/Qt/5.10.1/clang_64")
+set(CMAKE_PREFIX_PATH "/home/marco/Qt5.7.0/5.7/gcc_64")
 
-# Find the QtWidgets library
+
 find_package(Qt5Widgets)
-
-# Add the include directories for the Qt 5 Widgets module to
-# the compile lines.
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
-# Use the compile definitions defined in the Qt 5 Widgets module
-add_definitions(${Qt5Widgets_DEFINITIONS})
-
-# Add compiler flags for building executables (-fPIE)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
-qt5_generate_moc(main.cpp main.moc)
-set(CMAKE_AUTOMOC on)
+add_executable(CFactorial-IDE main.cpp MainWindow.h MainWindow.cpp)
 
-# Tell CMake to create the helloworld executable
-add_executable(helloworld main.cpp main.moc)
-
-#Link the helloworld executable to the Qt 5 widgets library.
-target_link_libraries(helloworld Qt5::Widgets)
+target_link_libraries(CFactorial-IDE Qt5::Widgets)
