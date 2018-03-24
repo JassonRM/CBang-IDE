@@ -4,6 +4,7 @@
 
 #include <QtWidgets>
 #include "MainWindow.h"
+#include "ServerConnection.h"
 
 int main(int argc, char *argv[]) {
 
