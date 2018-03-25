@@ -1,12 +1,12 @@
 //
-// Created by marco on 24/03/18.
+// Created by marco on 25/03/18.
 //
 
-#include "AssigExpression.h"
+#include "DeclarationExpression.h"
 
-void AssigExpression::interpret() {
+void DeclarationExpression::interpret() {
     if (isLeaf()) {
-        //Assign value to memory slot
+        //Create memory slot
         return;
     }
     int end = internalExpressions.size();
@@ -14,5 +14,5 @@ void AssigExpression::interpret() {
         (internalExpressions)[begin]->interpret();
     }
 
-    //Assign value to memory slot
+    //create memory slot
 }
