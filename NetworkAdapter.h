@@ -5,7 +5,6 @@
 #ifndef CFACTORIAL_IDE_NETWORKADAPTER_H
 #define CFACTORIAL_IDE_NETWORKADAPTER_H
 
-#include <QtNetwork>
 #include <QTcpSocket>
 
 class NetworkAdapter {
