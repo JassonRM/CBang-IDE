@@ -2,7 +2,6 @@
 // Created by Jasson Rodríguez Méndez on 23/3/18.
 //
 
-#include <iostream>
 #include "ServerConnection.h"
 
 
