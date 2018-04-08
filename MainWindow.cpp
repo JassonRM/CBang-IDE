@@ -2,6 +2,7 @@
 // Created by marco on 19/03/18.
 //
 
+#include <iostream>
 #include "MainWindow.h"
 
 MainWindow::MainWindow(){
@@ -11,7 +12,6 @@ MainWindow::MainWindow(){
     applicationLog = new QLabel();
     stdOut = new QLabel();
     editor = new QPlainTextEdit();
-    toolbar = new QToolBar();
 
     QSplitter* verticalSplitter = new QSplitter(Qt::Orientation::Vertical);
     QSplitter* horizontalSplitter = new QSplitter(Qt::Orientation::Horizontal);
@@ -40,6 +40,13 @@ MainWindow::MainWindow(){
 
     setCentralWidget(centralWidget);
 
-    this->addToolBar(toolbar);
+
+    QToolBar* toolbar = this->addToolBar("Main ToolBar");
+    toolbar->addAction("Run",this,SLOT(callParser()));
+
     this->resize(windowWidth,windowHeight);
+}
+
+void MainWindow::callParser(){
+    parse(editor->toPlainText().toStdString());
 }

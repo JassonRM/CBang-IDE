@@ -7,13 +7,16 @@
 
 
 #include <QtWidgets>
+#include "Parser.h"
 
 class MainWindow : public QMainWindow {
 
+    Q_OBJECT
 public:
     MainWindow();
 
 private slots:
+    void callParser();
 
 private:
     QWidget* centralWidget;
