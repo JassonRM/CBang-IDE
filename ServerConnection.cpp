@@ -3,20 +3,53 @@
 //
 
 #include "ServerConnection.h"
+#include <iostream>
 
+ServerConnection::ServerConnection() {}
 
-ServerConnection::ServerConnection() {
-    adapter = new NetworkAdapter(serverAddress, serverPort);
-    adapter->setOnReceive(&receive);
+void ServerConnection::connect(QString address, quint16 port) {
+    this->address = address;
+    this->port = port;
+    socket = new QTcpSocket();
+    socket->connectToHost(address, port);
+    if(socket->waitForConnected(5000)) {
+        std::cout << "Conectado con " << address.toStdString() << " en el puerto " << port << std::endl;
+    }else{
+        qDebug()<<"No se ha podido conectar al servidor";
+        qDebug() << socket->error();
+    }
 }
 
-bool ServerConnection::send(QJsonDocument *data) {
-    if(data->isObject()) {
-        QByteArray message = data->toBinaryData();
-        adapter->send(message);
-        return true;
+void ServerConnection::connect() {
+    socket = new QTcpSocket();
+    socket->connectToHost(address, port);
+    if(socket->waitForConnected(5000)) {
+        std::cout << "Conectado con " << address.toStdString() << " en el puerto " << port << std::endl;
     }else{
-        return false;
+        std::cout<<"No se ha podido conectar al servidor"<<std::endl;
+    }
+}
+
+QJsonDocument ServerConnection::request(QJsonDocument *data) {
+    if (data->isObject()) {
+        socket->write(data->toJson().data());
+        socket->flush();
+        std::cout<<"Mensaje: "<<data->toJson().data()<<std::endl;
+
+        QString received = "";
+
+        socket->waitForReadyRead();
+
+        received = socket->readAll();
+
+        QJsonDocument receivedData = QJsonDocument::fromJson(received.toUtf8());
+
+        while(!receivedData.isObject()){
+            socket->waitForReadyRead();
+            received.append(socket->readAll());
+        }
+
+        return receivedData;
     }
 }
 
@@ -28,17 +61,3 @@ ServerConnection *ServerConnection::getServerConnection() {
     return serverConnection;
 }
 
-bool ServerConnection::receive(QByteArray data) {
-    QJsonDocument receivedData = QJsonDocument::fromBinaryData(data);
-    if(receivedData.isObject()){
-        ServerConnection::getServerConnection()->incomingData = receivedData;
-        return true;
-    }else{
-        return false;
-    }
-}
-
-void ServerConnection::setServerAddress(QString address, quint16 port) {
-    this->serverAddress = address;
-    this->serverPort = port;
-}

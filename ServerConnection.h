@@ -6,15 +6,16 @@
 #define CFACTORIAL_IDE_SERVERCONNECTION_H
 
 #include <QJsonDocument>
+#include <QTcpSocket>
+#include <array>
 
-#include "NetworkAdapter.h"
 
 class ServerConnection {
 private:
-    NetworkAdapter *adapter;
-    QJsonDocument incomingData;
-    QString serverAddress = "localhost";
-    quint16 serverPort = 8080;
+    QString address = "localhost";
+    quint16 port = 2000;
+    QTcpSocket *socket = nullptr;
+    std::array<char, 4096> buffer;
 
     //Private constructor
     ServerConnection();
@@ -23,17 +24,14 @@ private:
     ServerConnection(ServerConnection const& copy); // Not implemented
     ServerConnection& operator=(ServerConnection const& copy); // Not implemented
 
-
 public:
     static ServerConnection *getServerConnection();
 
-    bool send(QJsonDocument *data);
+    QJsonDocument request(QJsonDocument *data);
 
-    bool static receive(QByteArray data);
+    void connect(QString address, quint16 port);
 
-    static QJsonDocument getData();
-
-    void setServerAddress(QString address, quint16 port);
+    void connect();
 };
 
 
