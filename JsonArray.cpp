@@ -2,29 +2,36 @@
 // Created by marco on 07/04/18.
 //
 
-#include "Structure.h"
+#include "JsonArray.h"
 
-void Structure::add(Variable* var){
+void JsonArray::add(Json* var){
     QJsonValue value = QJsonValue(*var->get());
     this->variables->append(value);
 }
 
-void Structure::put(string key,string value){
+void JsonArray::put(string key,string value){
     QJsonValue *jsonValue = new QJsonValue(QString::fromStdString(value));
     this->json->insert(QString::fromStdString(key),*jsonValue);
     delete(jsonValue);
 }
 
-void Structure::submit() {
+void JsonArray::put(string key,int value){
+    QJsonValue *jsonValue = new QJsonValue(value);
+    this->json->insert(QString::fromStdString(key),*jsonValue);
+    delete(jsonValue);
+}
+
+void JsonArray::submit() {
     QJsonValue *jsonValue = new QJsonValue(*variables);
     this->json->insert("Variables",*jsonValue);
     delete(jsonValue);
-    //TODO request
+    this->put("Request", "Define Struct");
+    //TODO send
     cout << this->toString() <<endl;
 
 }
 
-string Structure::toString(){
+string JsonArray::toString(){
     QJsonDocument doc(*this->json);
     QString strJson(doc.toJson(QJsonDocument::Compact));
     return strJson.toStdString();

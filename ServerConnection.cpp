@@ -30,7 +30,8 @@ void ServerConnection::connect() {
     }
 }
 
-QJsonDocument ServerConnection::request(QJsonDocument *data) {
+QJsonDocument* ServerConnection::request(QJsonDocument *data) {
+    return new QJsonDocument();
     if (data->isObject()) {
         socket->write(data->toJson().data());
         socket->flush();
@@ -44,12 +45,14 @@ QJsonDocument ServerConnection::request(QJsonDocument *data) {
 
         QJsonDocument receivedData = QJsonDocument::fromJson(received.toUtf8());
 
+        QJsonDocument* receivedDataPtr = &receivedData;
+
         while(!receivedData.isObject()){
             socket->waitForReadyRead();
             received.append(socket->readAll());
         }
 
-        return receivedData;
+        return receivedDataPtr;
     }
 }
 

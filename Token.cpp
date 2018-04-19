@@ -3,8 +3,9 @@
 //
 #include "Token.h"
 
+int Token::lineNum = 1;
 
-tokenType evaluateToken(string token){
+tokenType Token::evaluateToken(string token){
     char types[][7] = {"int","char","long","double","float"};
     for (char* type : types) {
         string stringType(type);
@@ -19,6 +20,7 @@ tokenType evaluateToken(string token){
         return LINE_SEPARATOR;
     }
     else if(token == "\n") {
+        lineNum++;
         return END_LINE;
     }else if(token == "{"){
         return OPEN_SCOPE;
@@ -32,8 +34,15 @@ tokenType evaluateToken(string token){
         return CLOSE_REFERENCE_SEPARATOR;
     }else if (token == "struct") {
         return STRUCT;
-    }else if(token == "getAddr"){
+    }else if(token == "getAddr") {
         return ADDRESS;
+    }else if(token == "getValue") {
+        return VALUE;
+    }else if(token == "print"){
+        return PRINT;
+    }else if(token == "\t"){
+        return END_LINE;
+        //TODO fix
     }else {
 
         regex regexIdentifier("[_a-zA-Z][_a-zA-Z0-9]*");
@@ -60,4 +69,11 @@ tokenType evaluateToken(string token){
 Token::Token(string value){
     this->value = value;
     this->type = evaluateToken(value);
+    this->line = lineNum;
+}
+
+Token::Token(string value,tokenType type) {
+    this->value = value;
+    this->type = type;
+    this->line = -1;
 }

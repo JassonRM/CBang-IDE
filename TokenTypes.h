@@ -19,7 +19,9 @@ enum tokenType {
     REFERENCE = 31, // reference
     OPEN_REFERENCE_SEPARATOR = 37, // <
     CLOSE_REFERENCE_SEPARATOR = 41, // >
-    ADDRESS = 43// getAddr
+    ADDRESS = 43,// getAddr
+    VALUE = 47,//getValue
+    PRINT = 53//print
 
 };
 

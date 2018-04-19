@@ -27,7 +27,7 @@ private:
 public:
     static ServerConnection *getServerConnection();
 
-    QJsonDocument request(QJsonDocument *data);
+    QJsonDocument* request(QJsonDocument *data);
 
     void connect(QString address, quint16 port);
 

@@ -9,21 +9,24 @@
 #include <QtWidgets>
 #include "Parser.h"
 
+
 class MainWindow : public QMainWindow {
 
     Q_OBJECT
 public:
     MainWindow();
+    void stdOutErr(string err);
 
 private slots:
     void callParser();
-
+    void callStepper();
+    void updateLines(int);
 private:
     QWidget* centralWidget;
 
     QVBoxLayout* vLayout;
 
-    QPlainTextEdit* editor;
+    QTextEdit* editor;
 
     QLabel* stdOut;
 
@@ -32,6 +35,8 @@ private:
     QTableView* tableView;
 
     QToolBar* toolbar;
+
+    QLabel* lineNumbers;
 
     int const windowWidth = 800;
 

@@ -3,33 +3,168 @@
 //
 
 #include "Parser.h"
-#include "Structure.h"
 
 vector<Token*>* tokens = nullptr;
 
-void parse(string code){
-
-    if (tokens == nullptr){
-        tokens = lex(code);
-    }
-
+void parseString(string code, MainWindow* window){
+    windowReference = window;
+    tokens = lex(code);
     parse(tokens);
+}
 
+void step(){
+    if (tokens == nullptr){
+        return;
+    }
+    parse(tokens);
 }
 
 
+
 void parse(vector<Token*>* tokens){
+
     int tokensDropped = 0;
 
     int FULL_REFERENCE = REFERENCE*OPEN_REFERENCE_SEPARATOR*DATA_TYPE*CLOSE_REFERENCE_SEPARATOR;
 
-    Variable* currentVar = nullptr;
-    Structure* structure = nullptr;
+    Json* currentVar = nullptr;
+    JsonArray* structure = nullptr;
 
+    Json* printer = nullptr;
+    bool printing = false;
+
+    vector<tokenType>* functions = new vector<tokenType>();
+    int parenthesis = 0;
     int count = 1;
+
+
     for (auto && token:*tokens) {
         tokensDropped++;
-        if (token->type == DATA_TYPE || token->type == REFERENCE){
+        if (!functions->empty()){
+            tokenType function = functions->back();
+            if (function == ADDRESS){
+                if (token->type == OPERATOR){
+                    if(token->value == "("){
+                        parenthesis++;
+                    }
+                    else if(token->value == ")"){
+                        parenthesis--;
+                        if (parenthesis == 0){
+                            functions->pop_back();
+                        }
+                    }else{
+                        //ERROR
+                    }
+                }
+                else if(token->type == IDENTIFIER){
+                    if (parenthesis <= 0){
+                        //Missing parenthesis
+                        break;
+                    }else{
+                        if (currentVar != nullptr) {
+                                Json* response = Requests::variableAddress(token->value);
+                                if (currentVar->get("Type") == "Reference " + response->get("Type")){
+                                    currentVar->addValue(response->get("Address"),LITERAL);
+                                    delete(response);
+                                }
+                                else{
+                                    //ERROR
+                                }
+
+                        }else if (printing){
+                            printer->addValue(Requests::variableAddress(token->value)->get("Address"),LITERAL);
+                        }
+                    }
+                }
+                else{
+                    //ERROR
+                    break;
+                }
+
+            }else if (function == VALUE){
+                if (token->type == OPERATOR){
+                    if(token->value == "("){
+                        parenthesis++;
+                    }
+                    else if(token->value == ")"){
+                        parenthesis--;
+                        if (parenthesis == 0){
+                            functions->pop_back();
+                        }
+                    }else {
+                        //ERROR
+                    }
+                }
+                else if(token->type == IDENTIFIER){
+                    if (parenthesis <= 0){
+                        //Missing parenthesis
+                        break;
+                    }else{
+                        if (currentVar != nullptr) {
+                            Json* response = Requests::referenceValue(token->value);
+                            if (currentVar->get("Type") == response->get("Type")){
+                                currentVar->addValue(response->get("Value"),LITERAL);
+                                delete(response);
+                            }
+                            else{
+                                //ERROR
+                            }
+
+                        }else if (printing){
+                            printer->addValue(Requests::referenceValue(token->value)->get("Value"),LITERAL);
+                        }else{
+                            break;
+                        }
+                    }
+                }
+                else{
+                    //ERROR
+                    break;
+                }
+            }else if(function == PRINT){
+                if (token->type == OPERATOR){
+                    if(token->value == "("){
+                        parenthesis++;
+                    }
+                    else if(token->value == ")"){
+                        if (parenthesis == 0){
+                            //ERROR
+                        }
+                        parenthesis--;
+
+                    }else{
+                        printer->addValue(token->value,OPERATOR);
+                    }
+                }
+                else if(token->type == IDENTIFIER){
+                    if (parenthesis <= 0){
+                        //Missing parenthesis
+                        break;
+                    }else{
+                        printer->addValue(token->value,token);
+                    }
+                }else if(token->type == LITERAL){
+                    printer->addValue(token->value,token);
+                }
+                else if(token->type == LINE_SEPARATOR){
+                    if (parenthesis == 0 && printer->get("Value") != ""){
+                        windowReference->stdOutErr(printer->get("Value"));
+                    }else{
+                        //ERROR
+                    }
+                }
+                else if(token->type == ADDRESS){
+                    functions->push_back(ADDRESS);
+                }else if(token->type == VALUE){
+                    functions->push_back(VALUE);
+                }else{
+                    //ERROR
+                    break;
+                }
+            }
+
+        }
+        else if (token->type == DATA_TYPE || token->type == REFERENCE){
             if (count == REFERENCE*OPEN_REFERENCE_SEPARATOR){
                 string newType = currentVar->get("Type");
                 newType.append(" ").append(token->value);
@@ -39,26 +174,45 @@ void parse(vector<Token*>* tokens){
             }
 
             else if (count != 1 && structure == nullptr){
-                cerr << "invalid syntax"<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Wrong use of keyword <" + token->value +">\n");
                 return;
             }
             count *= token->type;
-            currentVar = new Variable();
+            currentVar = new Json();
             currentVar->put("Type",token->value);
             currentVar->put("Scope",currentScope);
 
         }else if (token->type == IDENTIFIER){
-            //TODO validate already existing variable
-            if (count == DATA_TYPE || count == FULL_REFERENCE){
 
+            if (count == DATA_TYPE || count == FULL_REFERENCE){
+                if (Requests::isVariable(token->value)){
+                    return;
+
+                }
                 currentVar->put("Identifier",token->value);
 
             }else if (count % ASSIGNMENT == 0) {
-                currentVar->addValue(token->value,token);
-            }else if(structure != nullptr){
+                string response = currentVar->addValue(token->value,token);
+                if (response != " "){
+                    windowReference->stdOutErr(response);
+                    return;
+                }
+            }else if(structure != nullptr) {
                 structure->put("Identifier", token->value);
-            //}else if(findStructure() != nullptr){
-            }else{
+            }
+            else if(count == 1){
+                if (Requests::isStruct(token->value)){
+                    currentVar = new Json();
+                    currentVar->put("Type",token->value);
+                    currentVar->put("Scope",currentScope);
+                    count *= DATA_TYPE;
+                }else if(Requests::isVariable(token->value)){
+                    string type = Requests::variableType(token->value);
+                    currentVar = new Json();
+                    currentVar->put("Identifier",token->value);
+                    currentVar->put("Request", "Change Value");
+                    currentVar->put("Type",type);
+                }
 
             }
 
@@ -70,28 +224,38 @@ void parse(vector<Token*>* tokens){
             }
             else{
                 delete(currentVar);
-                cerr << count<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Assignment operator \"=\" out of context\n");
                 return;
             }
         }else if (token->type == LITERAL){
             if (count % (DATA_TYPE*IDENTIFIER*ASSIGNMENT) == 0 ||
                 count % (IDENTIFIER*ASSIGNMENT) == 0 || count % (FULL_REFERENCE*IDENTIFIER*ASSIGNMENT) == 0){
-                currentVar->addValue(token->value,token);
+                string response = currentVar->addValue(token->value,token);
+                if (response != " "){
+                    windowReference->stdOutErr(response);
+                    return;
+                }
             }else{
-                cerr<<"invalid syntax"<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Literal <"+token->value + "> out of context\n");
                 return;
             }
 
         }else if (token->type == LINE_SEPARATOR){
-            //currentVar->set();
-            if(structure == nullptr){
-                cout <<currentVar->toString()<<endl;
-
-            }else if (currentVar == nullptr){
+            if(structure == nullptr && currentVar != nullptr){
+                currentVar->submit();
+            }else if (currentVar == nullptr && structure != nullptr){
+                //request define struct
                 structure->submit();
                 delete(structure);
                 structure = nullptr;
-
+            }
+            else if(printing){
+                printing = false;
+                cout << printer->toString()<< endl;
+                delete(printer);
+                printer = nullptr;
+                count = 1;
+                continue;
             }
             else{
                 structure->add(currentVar);
@@ -102,35 +266,36 @@ void parse(vector<Token*>* tokens){
             }
             delete(currentVar);
             currentVar = nullptr;
-            count = 1;
             break;
 
-
-
-            //varTable->push_back(currentVar);
-
-            //TODO step
-
-
         }else if (token->type == OPERATOR){
+
             if(currentVar != nullptr){
-                currentVar->addValue(token->value,token);
+                string response = currentVar->addValue(token->value,token);
+                if (response != " "){
+                    windowReference->stdOutErr(response);
+                    return;
+                }
             }
         }else if (token->type == OPEN_REFERENCE_SEPARATOR){
             if (count == REFERENCE){
                 count *= OPEN_REFERENCE_SEPARATOR;
             }else{
-                cerr <<"syntax error"<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Wrong use of \"<\"\n");
+                return;
             }
         }else if (token->type == CLOSE_REFERENCE_SEPARATOR){
             if (count == REFERENCE*OPEN_REFERENCE_SEPARATOR*DATA_TYPE){
                 count *= CLOSE_REFERENCE_SEPARATOR;
             }else{
-                cerr <<"syntax error"<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line)+ " : Wrong use of \">\"\n");
+                return;
             }
         }else if(token->type == OPEN_SCOPE){
-            if (structure != nullptr){
-
+            if (count == STRUCT){
+                structure = new JsonArray();
+                structure->put("Scope",currentScope);
+                count = 1;
             }else{currentScope++;}
         }
         else if(token->type == CLOSE_SCOPE){
@@ -138,30 +303,43 @@ void parse(vector<Token*>* tokens){
 
             }else{
                 //closeScope(currentScope);
-                currentScope--;}
+                currentScope--;
+            }
 
         }
         else if(token->type == STRUCT){
             if (count != 1){
-                cout<<"syntax error"<<endl;
+                windowReference->stdOutErr("Error in line" + to_string(token->line)+ " : Wrong use of keyword <struct>\n");
                 return;
             }
-            structure = new Structure();
+            count *= STRUCT;
+
         }
         else if(token->type == END_LINE){
             continue;
-        }
-        else{
-            cout<<"syntax error"<<endl;
+        }else if(token->type == ADDRESS){
+            functions->push_back(ADDRESS);
+        }else if(token->type == PRINT){
+            functions->push_back(PRINT);
+            printer = new Json();
+            printing = true;
+        }else if(token->type == VALUE) {
+            functions->push_back(VALUE);
+        } else{
+            windowReference->stdOutErr("Error in line" + to_string(token->line) + "\n");
             return;
         }
-
     }
     tokens->erase(tokens->begin(),tokens->begin()+tokensDropped);
-    if ((currentVar != nullptr || currentScope != 0) && tokens->size() == 0){
-        cerr << "Semicolon missing"<<endl;
+    if (currentVar != nullptr && tokens->size() == 0) {
+        windowReference->stdOutErr("<;> missing : Unfinished variable\n");
+        return;
+    }else if(currentScope != 0 && tokens->size() == 0){
+        windowReference->stdOutErr("<}> missing : Scope not closed\n");
+        return;
     }else if(structure != nullptr){
-        cerr <<"} missing"<<endl;
+        windowReference->stdOutErr("<}> or <;> missing : Unfinished structure\n");
+        return;
     }
 
 
@@ -171,11 +349,12 @@ vector<Token*>* lex(string code){
     using namespace boost;
     typedef tokenizer<char_separator<char>> tokenizer;
 
-    char_separator<char> sep(" ","\n+-/*%;{}<>()",drop_empty_tokens);
+    char_separator<char> sep(" ","\n+-/*%;{}<>=()\t",drop_empty_tokens);
 
     vector<Token*>* result = new vector<Token*>();
 
     tokenizer tokens(code,sep);
+    Token::lineNum = 1;
     for(tokenizer::iterator beg=tokens.begin(); beg!=tokens.end();++beg){
 
         result->push_back(new Token(*beg));
