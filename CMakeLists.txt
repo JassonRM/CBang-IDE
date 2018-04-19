@@ -3,14 +3,20 @@ project(CFactorial-IDE)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_PREFIX_PATH "/home/marco/Qt5.7.0/5.7/gcc_64")
+set(CMAKE_PREFIX_PATH "/Applications/Qt/5.10.1/clang_64")
 
+set(Boost_INCLUDE_DIR /usr/local/Cellar/boost/1.66.0/include)
+set(Boost_LIBRARY_DIR /usr/local/Cellar/boost/1.66.0/lib)
 
 find_package(Qt5Widgets REQUIRED)
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
 find_package(Qt5Network REQUIRED)
 include_directories(${Qt5Network_INCLUDE_DIRS})
+
+find_package(Boost COMPONENTS system REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIR})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
