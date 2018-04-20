@@ -67,6 +67,7 @@ void parse(vector<Token*>* tokens){
                                 if (currentVar->get("Type") == "Reference " + response->get("Type")){
                                     currentVar->addValueUnchecked(response->get("Address"));
                                     delete(response);
+                                    continue;
                                 }
                                 else{
                                     return;
@@ -216,6 +217,7 @@ void parse(vector<Token*>* tokens){
                     currentVar->put("Struct","true");
                     currentVar->put("Scope",currentScope);
                     count *= DATA_TYPE;
+                    continue;
                 }else if(Requests::isVariable(token->value)){
                     string type = Requests::variableType(token->value);
                     currentVar = new Json();

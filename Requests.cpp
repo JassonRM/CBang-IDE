@@ -18,8 +18,7 @@ QJsonDocument* Requests::request(string identifier,string request){
 
 bool Requests::isVariable(string identifier) {
     QJsonDocument* document = request(identifier, "Is Variable");
-    QJsonObject value = document->object();
-    if (value.isEmpty()){
+    if (document->object().value("Result").isUndefined()){
         return false;
     }
     return document->object().value("Result").toBool();
