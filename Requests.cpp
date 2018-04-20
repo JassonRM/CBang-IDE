@@ -18,13 +18,18 @@ QJsonDocument* Requests::request(string identifier,string request){
 
 bool Requests::isVariable(string identifier) {
     QJsonDocument* document = request(identifier, "Is Variable");
-    return !document->object().isEmpty();
-
+    if (document->object().value("Result").isUndefined()){
+        return false;
+    }
+    return document->object().value("Result").toBool();
 }
 
 bool Requests::isStruct(string identifier) {
     QJsonDocument* document = request(identifier, "Is Struct");
-    return !document->object().isEmpty();
+    if (document->object().value("Result").isUndefined()){
+        return false;
+    }
+    return document->object().value("Result").toBool();
 }
 
 string Requests::variableType(string identifier){
@@ -78,18 +83,60 @@ Json* Requests::referenceValue(string identifier){
     return json;
     }
 
-
-Json* Requests::newVariable(Json *request) {
-    request->put("Request","New Variable");
+void arithmeticSolver(Json* request){
     if (request->get("Type") == "int"){
         if (request->get("Value") != ""){
             int value = (int)te_interp(request->get("Value").data(),0);
             request->put("Value",value);
         }
-
     }
-    QJsonDocument* document = new QJsonDocument(*request->get());
-    cout <<document->toJson().toStdString()<<endl;
-    document = (server->request(document));
+    else if (request->get("Type") == "double"){
+        if (request->get("Value") != ""){
+            double value = te_interp(request->get("Value").data(),0);
+            request->put("Value",value);
+        }
+    }
+    else if (request->get("Type") == "float"){
+        if (request->get("Value") != ""){
+            float value = (float)(request->get("Value").data(),0);
+            request->put("Value",value);
+        }
+    }
+    else if (request->get("Type") == "long"){
+        if (request->get("Value") != ""){
+            long value = (long)(request->get("Value").data(),0);
+            request->put("Value",value);
+        }
+    }else{};
+}
 
+Json* Requests::newVariable(Json *request) {
+    string type = request->get("Type");
+    if (request->get("Request") == "Change Value"){
+        arithmeticSolver(request);
+    }else if(request->get("Struct") == "true"){
+        request->get()->remove("Struct");
+        if (request->get("Value") == ""){
+            request->put("Request", "New Struct");
+        }else{
+            request->put("Request", "Copy Struct");
+        }
+    }else if( type == "Reference int" || type == "Reference char" || type == "Reference double" ||
+            type == "Reference float" || type == "Reference long"){
+        request->put("Request", "New Reference");
+    }else{
+        request->put("Request","New Variable");
+        arithmeticSolver(request);
+    }
+
+    QJsonDocument* document = new QJsonDocument(*request->get());
+    server->request(document);
+    return nullptr;
+}
+
+Json* Requests::defineStruct(JsonArray *request) {
+    request->put("Request","Define Struct");
+    QJsonDocument* document = new QJsonDocument(*request->get());
+    document = (server->request(document));
+    return nullptr;
 }

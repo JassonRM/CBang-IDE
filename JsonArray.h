@@ -48,6 +48,7 @@ public:
      * @return
      */
     string toString();
+    QJsonObject* get();
 };
 
 

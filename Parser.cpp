@@ -54,6 +54,7 @@ void parse(vector<Token*>* tokens){
                         }
                     }else{
                         //ERROR
+                        return;
                     }
                 }
                 else if(token->type == IDENTIFIER){
@@ -64,15 +65,18 @@ void parse(vector<Token*>* tokens){
                         if (currentVar != nullptr) {
                                 Json* response = Requests::variableAddress(token->value);
                                 if (currentVar->get("Type") == "Reference " + response->get("Type")){
-                                    currentVar->addValue(response->get("Address"),LITERAL);
+                                    currentVar->addValueUnchecked(response->get("Address"));
                                     delete(response);
                                 }
                                 else{
-                                    //ERROR
+                                    return;
                                 }
 
                         }else if (printing){
-                            printer->addValue(Requests::variableAddress(token->value)->get("Address"),LITERAL);
+                            string response = printer->addValue(Requests::variableAddress(token->value)->get("Address"),LITERAL);
+                            if (response != " "){
+                                return;
+                            }
                         }
                     }
                 }
@@ -93,6 +97,7 @@ void parse(vector<Token*>* tokens){
                         }
                     }else {
                         //ERROR
+                        return;
                     }
                 }
                 else if(token->type == IDENTIFIER){
@@ -103,15 +108,18 @@ void parse(vector<Token*>* tokens){
                         if (currentVar != nullptr) {
                             Json* response = Requests::referenceValue(token->value);
                             if (currentVar->get("Type") == response->get("Type")){
-                                currentVar->addValue(response->get("Value"),LITERAL);
+                                currentVar->addValueUnchecked(response->get("Value"));
                                 delete(response);
                             }
                             else{
-                                //ERROR
+                                return;
                             }
 
                         }else if (printing){
-                            printer->addValue(Requests::referenceValue(token->value)->get("Value"),LITERAL);
+                            string response = printer->addValue(Requests::referenceValue(token->value)->get("Value"),LITERAL);
+                            if (response != " "){
+                                return;
+                            }
                         }else{
                             break;
                         }
@@ -128,7 +136,7 @@ void parse(vector<Token*>* tokens){
                     }
                     else if(token->value == ")"){
                         if (parenthesis == 0){
-                            //ERROR
+                            return;
                         }
                         parenthesis--;
 
@@ -185,10 +193,10 @@ void parse(vector<Token*>* tokens){
         }else if (token->type == IDENTIFIER){
 
             if (count == DATA_TYPE || count == FULL_REFERENCE){
-                //if (Requests::isVariable(token->value)){
-                  //  return;
+                if (Requests::isVariable(token->value)) || Requests::isStruct(token->value)){
+                    return;
 
-                //}
+                }
                 currentVar->put("Identifier",token->value);
 
             }else if (count % ASSIGNMENT == 0) {
@@ -197,13 +205,15 @@ void parse(vector<Token*>* tokens){
                     windowReference->stdOutErr(response);
                     return;
                 }
-            }else if(structure != nullptr) {
+            }else if(structure != nullptr && currentVar == nullptr) {
                 structure->put("Identifier", token->value);
             }
             else if(count == 1){
                 if (Requests::isStruct(token->value)){
                     currentVar = new Json();
                     currentVar->put("Type",token->value);
+                    currentVar->put("Scope",currentScope);
+                    currentVar->put("Struct","true");
                     currentVar->put("Scope",currentScope);
                     count *= DATA_TYPE;
                 }else if(Requests::isVariable(token->value)){
@@ -214,6 +224,8 @@ void parse(vector<Token*>* tokens){
                     currentVar->put("Type",type);
                 }
 
+            }else{
+                return;
             }
 
             count *= IDENTIFIER;
@@ -244,8 +256,8 @@ void parse(vector<Token*>* tokens){
             if(structure == nullptr && currentVar != nullptr){
                 Requests::newVariable(currentVar);
             }else if (currentVar == nullptr && structure != nullptr){
-                //request define struct
-                structure->submit();
+                structure->submit(); // adds variables
+                Requests::defineStruct(structure);
                 delete(structure);
                 structure = nullptr;
             }
@@ -254,8 +266,8 @@ void parse(vector<Token*>* tokens){
                 cout << printer->toString()<< endl;
                 delete(printer);
                 printer = nullptr;
-                count = 1;
-                continue;
+                break;
+
             }
             else{
                 structure->add(currentVar);

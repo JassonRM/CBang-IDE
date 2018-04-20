@@ -15,20 +15,53 @@ void Json::put(string key,int value){
     delete(jsonValue);
 }
 
+void Json::put(string key,double value){
+    QJsonValue *jsonValue = new QJsonValue(value);
+    this->json->insert(QString::fromStdString(key),*jsonValue);
+    delete(jsonValue);
+}
+
+void Json::put(string key,float value){
+    QJsonValue *jsonValue = new QJsonValue(value);
+    this->json->insert(QString::fromStdString(key),*jsonValue);
+    delete(jsonValue);
+}
+
+void Json::put(string key,long value){
+    QJsonValue *jsonValue = new QJsonValue(qint64(value));
+    this->json->insert(QString::fromStdString(key),*jsonValue);
+    delete(jsonValue);
+}
+
 void Json::putJsonValue(string key,QJsonValue value){
     this->json->insert(QString::fromStdString(key),value);
 }
 
 
 string Json::addValue(string value, Token* token){
+    if (this->get("Struct") == "true"){
+        if (token->type != IDENTIFIER || !Requests::isVariable(value)
+                || Requests::variableType(value) != this->get("Type")
+                || this->get("Value") != ""){
+            //error
+            return "ERROR";
+        }
+        this->put("Value", value);
+        return " ";
+
+    }
     string response = " ";
     if (token->type == IDENTIFIER){
         Json* var = Requests::variableValue(token->value);
-        if (var == nullptr){
+        if(this->get("Type") == ""){
+            this->put("Type",var->get("Value"));
+        }
+
+        if (var->get("Value") == ""){
             response = "variable doesn't exist";
             return response;
         }
-        else if (var->get("Type") != this->get("Type") && this->get("Type") != ""){
+        else if (var->get("Type") != this->get("Type")){
             response = "types don't match";
             return response;
         }
@@ -77,6 +110,9 @@ string Json::addValue(string value, Token* token){
         }
     }else if (token->type == OPERATOR) {
             string type = this->get("Type");
+            if(this->get("Value") == ""){
+                return "ERROR";
+            }
             if (type != "int" && type != "double" && type != "float" && type != "long" && type != "") {
                 response = "Error in line" + to_string(token->line) + " : Can't use <" + token->value +
                            "> operator with non numeric data type\n";
@@ -120,4 +156,8 @@ string Json::addValue(string value, tokenType type){
     string response = addValue(value,token);
     delete(token);
     return response;
+}
+
+string Json::addValueUnchecked(string value){
+    this->put("Value", this->get("Value").append(value));
 }

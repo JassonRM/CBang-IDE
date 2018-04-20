@@ -34,6 +34,12 @@ public:
      */
     void put(string key,int value);
 
+    void put(string key,float value);
+
+    void put(string key,double value);
+
+    void put(string key,long value);
+
     /**Agrega el valor y la llave asociada al objeto JSON
      *
      * @param key llave
@@ -81,6 +87,7 @@ public:
      */
     string toString();
 
+    string addValueUnchecked(string value);
 
 };
 

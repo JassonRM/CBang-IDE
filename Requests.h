@@ -10,6 +10,7 @@
 #include "Json.h"
 #include "ServerConnection.h"
 #include "tinyexpr.h"
+#include "JsonArray.h"
 
 using namespace std;
 
@@ -70,6 +71,9 @@ public:
     static Json* referenceValue(string identifier);
 
     static Json* newVariable(Json* request);
+
+    static Json* defineStruct(JsonArray* request);
+
 };
 
 

@@ -26,8 +26,6 @@ void JsonArray::submit() {
     this->json->insert("Variables",*jsonValue);
     delete(jsonValue);
     this->put("Request", "Define Struct");
-    //TODO send
-    cout << this->toString() <<endl;
 
 }
 
@@ -35,4 +33,8 @@ string JsonArray::toString(){
     QJsonDocument doc(*this->json);
     QString strJson(doc.toJson(QJsonDocument::Compact));
     return strJson.toStdString();
+}
+
+QJsonObject* JsonArray::get(){
+    return this->json;
 }
