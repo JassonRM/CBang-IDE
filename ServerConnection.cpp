@@ -5,7 +5,9 @@
 #include "ServerConnection.h"
 #include <iostream>
 
-ServerConnection::ServerConnection() {}
+ServerConnection::ServerConnection() {
+    connect();
+}
 
 void ServerConnection::connect(QString address, quint16 port) {
     this->address = address;
@@ -31,7 +33,6 @@ void ServerConnection::connect() {
 }
 
 QJsonDocument* ServerConnection::request(QJsonDocument *data) {
-    return new QJsonDocument();
     if (data->isObject()) {
         socket->write(data->toJson().data());
         socket->flush();

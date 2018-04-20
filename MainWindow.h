@@ -5,9 +5,11 @@
 #ifndef CFACTORIAL_IDE_MAINWINDOW_H
 #define CFACTORIAL_IDE_MAINWINDOW_H
 
-
+#include <iostream>
 #include <QtWidgets>
 #include "Parser.h"
+#include "TextEditor.h"
+#include "Highlighter.h"
 
 
 class MainWindow : public QMainWindow {
@@ -20,13 +22,12 @@ public:
 private slots:
     void callParser();
     void callStepper();
-    void updateLines(int);
 private:
     QWidget* centralWidget;
 
     QVBoxLayout* vLayout;
 
-    QTextEdit* editor;
+    TextEditor* editor;
 
     QLabel* stdOut;
 

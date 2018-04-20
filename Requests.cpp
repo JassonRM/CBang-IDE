@@ -13,6 +13,7 @@ QJsonDocument* Requests::request(string identifier,string request){
     QJsonDocument* document = new QJsonDocument(*json->get());
     delete (json);
     document = (server->request(document));
+    return document;
 }
 
 bool Requests::isVariable(string identifier) {
@@ -76,3 +77,19 @@ Json* Requests::referenceValue(string identifier){
     json->putJsonValue("Type",type);
     return json;
     }
+
+
+Json* Requests::newVariable(Json *request) {
+    request->put("Request","New Variable");
+    if (request->get("Type") == "int"){
+        if (request->get("Value") != ""){
+            int value = (int)te_interp(request->get("Value").data(),0);
+            request->put("Value",value);
+        }
+
+    }
+    QJsonDocument* document = new QJsonDocument(*request->get());
+    cout <<document->toJson().toStdString()<<endl;
+    document = (server->request(document));
+
+}

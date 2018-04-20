@@ -185,10 +185,10 @@ void parse(vector<Token*>* tokens){
         }else if (token->type == IDENTIFIER){
 
             if (count == DATA_TYPE || count == FULL_REFERENCE){
-                if (Requests::isVariable(token->value)){
-                    return;
+                //if (Requests::isVariable(token->value)){
+                  //  return;
 
-                }
+                //}
                 currentVar->put("Identifier",token->value);
 
             }else if (count % ASSIGNMENT == 0) {
@@ -242,7 +242,7 @@ void parse(vector<Token*>* tokens){
 
         }else if (token->type == LINE_SEPARATOR){
             if(structure == nullptr && currentVar != nullptr){
-                currentVar->submit();
+                Requests::newVariable(currentVar);
             }else if (currentVar == nullptr && structure != nullptr){
                 //request define struct
                 structure->submit();

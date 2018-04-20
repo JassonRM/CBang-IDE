@@ -23,8 +23,6 @@ void Json::putJsonValue(string key,QJsonValue value){
 string Json::addValue(string value, Token* token){
     string response = " ";
     if (token->type == IDENTIFIER){
-        value = token->value;
-        /*
         Json* var = Requests::variableValue(token->value);
         if (var == nullptr){
             response = "variable doesn't exist";
@@ -35,7 +33,6 @@ string Json::addValue(string value, Token* token){
             return response;
         }
         value = var->get("Value");
-         */
     }else if (token->type == LITERAL) {
 
         if (this->get("Type") == "long") {
@@ -48,7 +45,7 @@ string Json::addValue(string value, Token* token){
             }
         } else if (this->get("Type") == "int") {
             try {
-                boost::lexical_cast<int>(value);
+                int value = boost::lexical_cast<int>(value);
             } catch (boost::bad_lexical_cast) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
                            "\" is not of type int\n";

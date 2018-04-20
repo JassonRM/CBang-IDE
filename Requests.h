@@ -9,6 +9,7 @@
 #include <QtCore/QJsonDocument>
 #include "Json.h"
 #include "ServerConnection.h"
+#include "tinyexpr.h"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ private:
     static QJsonDocument* request(string, string);
 
 public:
+
     /**Verifica si una variable existe en memoria
      *
      * @param identifier
@@ -66,7 +68,10 @@ public:
      * @return
      */
     static Json* referenceValue(string identifier);
+
+    static Json* newVariable(Json* request);
 };
+
 
 
 #endif //CFACTORIAL_IDE_REQUESTS_H
