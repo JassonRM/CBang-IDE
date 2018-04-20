@@ -193,7 +193,7 @@ void parse(vector<Token*>* tokens){
         }else if (token->type == IDENTIFIER){
 
             if (count == DATA_TYPE || count == FULL_REFERENCE){
-                if (Requests::isVariable(token->value)) || Requests::isStruct(token->value)){
+                if (Requests::isVariable(token->value) || Requests::isStruct(token->value)){
                     return;
 
                 }
