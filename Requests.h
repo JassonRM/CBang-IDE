@@ -74,6 +74,7 @@ public:
 
     static Json* defineStruct(JsonArray* request);
 
+    static void closeScope(int scope);
 };
 
 

@@ -51,8 +51,10 @@ QJsonDocument* ServerConnection::request(QJsonDocument *data) {
             socket->waitForReadyRead();
             received.append(socket->readAll());
         }
+
         receivedData = QJsonDocument::fromJson(received.toUtf8());
-        QJsonDocument* receivedDataPtr = &receivedData;
+        QJsonDocument* receivedDataPtr = (QJsonDocument*)malloc(sizeof(QJsonDocument));
+        *receivedDataPtr = receivedData;
 
         return receivedDataPtr;
     }

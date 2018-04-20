@@ -174,7 +174,7 @@ void parse(vector<Token*>* tokens){
         }
         else if (token->type == DATA_TYPE || token->type == REFERENCE){
             if (count == REFERENCE*OPEN_REFERENCE_SEPARATOR){
-                string newType = currentVar->get("Type");
+                string newType = "Reference";
                 newType.append(" ").append(token->value);
                 currentVar->put("Type",newType);
                 count *= DATA_TYPE;
@@ -314,7 +314,7 @@ void parse(vector<Token*>* tokens){
             if (structure != nullptr){
 
             }else{
-                //closeScope(currentScope);
+                Requests::closeScope(currentScope);
                 currentScope--;
             }
 

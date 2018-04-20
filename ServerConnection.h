@@ -6,6 +6,7 @@
 #define CFACTORIAL_IDE_SERVERCONNECTION_H
 
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QTcpSocket>
 #include <array>
 

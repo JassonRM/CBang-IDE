@@ -18,7 +18,8 @@ QJsonDocument* Requests::request(string identifier,string request){
 
 bool Requests::isVariable(string identifier) {
     QJsonDocument* document = request(identifier, "Is Variable");
-    if (document->object().value("Result").isUndefined()){
+    QJsonObject value = document->object();
+    if (value.isEmpty()){
         return false;
     }
     return document->object().value("Result").toBool();
@@ -139,4 +140,13 @@ Json* Requests::defineStruct(JsonArray *request) {
     QJsonDocument* document = new QJsonDocument(*request->get());
     document = (server->request(document));
     return nullptr;
+}
+
+void Requests::closeScope(int scope) {
+    Json *json = new Json();
+    json->put("Request", "Close Scope");
+    json->put("Scope", scope);
+    QJsonDocument *document = new QJsonDocument(*json->get());
+    delete (json);
+    document = (server->request(document));
 }
