@@ -76,10 +76,6 @@ public:
      */
     string get(string key);
 
-    /**
-     * Crea el request específico y lo pasa al ServerConnections
-     */
-    void submit();
 
     /**Obtiene la version en string del objeto JSON
      *

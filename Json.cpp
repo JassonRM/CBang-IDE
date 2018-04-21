@@ -4,7 +4,8 @@
 
 #include "Json.h"
 #include "Requests.h"
-#include <stdlib.h>
+#include <loguru.hpp>
+
 void Json::put(string key,string value){
     QJsonValue *jsonValue = new QJsonValue(QString::fromStdString(value));
     this->json->insert(QString::fromStdString(key),*jsonValue);
@@ -44,8 +45,9 @@ string Json::addValue(string value, Token* token){
         if (token->type != IDENTIFIER || !Requests::isVariable(value)
                 || Requests::variableType(value) != this->get("Type")
                 || this->get("Value") != ""){
-            //error
-            return "ERROR";
+
+            LOG_F(ERROR,"UNKNOWN ERROR");
+            return "";
         }
         this->put("Value", value);
         return " ";
@@ -60,11 +62,13 @@ string Json::addValue(string value, Token* token){
         }
 
         if (var->get("Value") == ""){
-            response = "variable doesn't exist";
+            response = "variable" +token->value+ "doesn't exist";
+            LOG_F(ERROR,response.data());
             return response;
         }
         else if (var->get("Type") != this->get("Type")){
-            response = "types don't match";
+            response = "Types don't match";
+            LOG_F(ERROR,response.data());
             return response;
         }
         value = var->get("Value");
@@ -74,8 +78,8 @@ string Json::addValue(string value, Token* token){
             try {
                 boost::lexical_cast<long>(value);
             } catch (boost::bad_lexical_cast) {
-                response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
-                           "\" is not of type long\n";
+                response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") + "\" is not of type long";
+                LOG_F(ERROR,response.data());
                 return response;
             }
         } else if (this->get("Type") == "int") {
@@ -84,6 +88,7 @@ string Json::addValue(string value, Token* token){
             } catch (boost::bad_lexical_cast) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
                            "\" is not of type int\n";
+                LOG_F(ERROR,response.data());
                 return response;
             }
         } else if (this->get("Type") == "float") {
@@ -92,6 +97,7 @@ string Json::addValue(string value, Token* token){
             } catch (boost::bad_lexical_cast) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
                            "\" is not of type float\n";
+                LOG_F(ERROR,response.data());
                 return response;
             }
         } else if (this->get("Type") == "double") {
@@ -99,13 +105,15 @@ string Json::addValue(string value, Token* token){
                 boost::lexical_cast<double>(value);
             } catch (boost::bad_lexical_cast) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
-                           "\" is not of type double\n";
+                           "\" is not of type double";
+                LOG_F(ERROR,response.data());
                 return response;
             }
         } else if (this->get("Type") == "char") {
             if (!regex_match(value, regex("\'.\'"))) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
-                           "\" is not of type char\n";
+                           "\" is not of type char";
+                LOG_F(ERROR,response.data());
                 return response;
             }
 
@@ -113,11 +121,13 @@ string Json::addValue(string value, Token* token){
     }else if (token->type == OPERATOR) {
             string type = this->get("Type");
             if(this->get("Value") == ""){
+                LOG_F(ERROR,"UNKNOWN ERROR");
                 return "ERROR";
             }
             if (type != "int" && type != "double" && type != "float" && type != "long" && type != "") {
                 response = "Error in line" + to_string(token->line) + " : Can't use <" + token->value +
                            "> operator with non numeric data type\n";
+                LOG_F(ERROR,response.data());
                 return response;
             }
     }
@@ -142,15 +152,6 @@ string Json::toString(){
     QJsonDocument doc(*this->json);
     QString strJson(doc.toJson(QJsonDocument::Compact));
     return strJson.toStdString();
-}
-
-void Json::submit() {
-    if(this->get("Request")== "Change Value"){
-        cout <<this->toString()<<endl;
-        return;
-    }
-    this->put("Request", "New Variable");
-    cout <<this->toString()<<endl;
 }
 
 string Json::addValue(string value, tokenType type){
@@ -180,7 +181,7 @@ void Json::arithmeticSolver(){
     }
     else if (this->get("Type") == "float"){
         if (this->get("Value") != ""){
-            float value = std::stof(this->get("Value"));
+            float value = boost::lexical_cast<float>(this->get("Value"));
             cout <<this->get("Value");
             this->put("Value",value);
         }

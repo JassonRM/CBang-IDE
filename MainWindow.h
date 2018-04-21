@@ -17,7 +17,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     MainWindow();
-    void stdOutErr(string err);
+    void stdOut1(string info);
+    void appLog(string err);
     void updateLiveView();
 
 private slots:

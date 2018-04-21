@@ -51,8 +51,9 @@ Json* Requests::variableValue(string identifier) {
         json->put("Value",std::to_string(value));
     }
     else if(type == "char"){
-        string value = document->object().value("Value").toString().toStdString();
-        json->put("Value",value);
+        int value = document->object().value("Value").toInt();
+        char charValue = value;
+        json->put("Value",charValue);
     }
     else if(type == "double"){
         double value = document->object().value("Value").toDouble();

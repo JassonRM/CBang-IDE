@@ -3,6 +3,7 @@
 //
 
 #include "Parser.h"
+#include "loguru.hpp"
 
 vector<Token*>* tokens = nullptr;
 
@@ -10,6 +11,19 @@ void parseString(string code, MainWindow* window){
     windowReference = window;
     tokens = lex(code);
     parse(tokens);
+    QFile file("/home/marco/everything.log");
+    file.open(QIODevice::ReadOnly);
+    string response;
+    while (!file.atEnd()) {
+        QByteArray line = file.readLine();
+        if (line == "\n"){
+            continue;
+        }
+        response.append(line);
+        response.append("\n");
+    }
+    windowReference->appLog(response);
+    file.close();
 }
 
 void step(){
@@ -17,6 +31,20 @@ void step(){
         return;
     }
     parse(tokens);
+    QFile file("/home/marco/everything.log");
+    file.open(QIODevice::ReadOnly);
+    string response;
+    while (!file.atEnd()) {
+        QByteArray line = file.readLine();
+        if (line == "\n"){
+            continue;
+        }
+        response.append(line);
+        response.append("\n");
+    }
+    windowReference->appLog(response);
+    file.close();
+
 }
 
 
@@ -53,13 +81,13 @@ void parse(vector<Token*>* tokens){
                             functions->pop_back();
                         }
                     }else{
-                        //ERROR
+                        LOG_F(ERROR,"Operator error");
                         return;
                     }
                 }
                 else if(token->type == IDENTIFIER){
                     if (parenthesis <= 0){
-                        //Missing parenthesis
+                        LOG_F(ERROR,"Parenthesis error");
                         break;
                     }else{
                         if (currentVar != nullptr) {
@@ -70,6 +98,7 @@ void parse(vector<Token*>* tokens){
                                     continue;
                                 }
                                 else{
+                                    LOG_F(ERROR,"Types don't match ");
                                     return;
                                 }
 
@@ -82,7 +111,7 @@ void parse(vector<Token*>* tokens){
                     }
                 }
                 else{
-                    //ERROR
+                    LOG_F(ERROR,"UNKNOWN ERROR");
                     break;
                 }
 
@@ -97,13 +126,13 @@ void parse(vector<Token*>* tokens){
                             functions->pop_back();
                         }
                     }else {
-                        //ERROR
+                        LOG_F(ERROR,"Operator error");
                         return;
                     }
                 }
                 else if(token->type == IDENTIFIER){
                     if (parenthesis <= 0){
-                        //Missing parenthesis
+                        LOG_F(ERROR,"Parenthesis error");
                         break;
                     }else{
                         if (currentVar != nullptr) {
@@ -113,21 +142,24 @@ void parse(vector<Token*>* tokens){
                                 delete(response);
                             }
                             else{
+                                LOG_F(ERROR,"UNKNOWN ERROR");
                                 return;
                             }
 
                         }else if (printing){
                             string response = printer->addValue(Requests::referenceValue(token->value)->get("Value"),LITERAL);
                             if (response != " "){
+                                LOG_F(ERROR,"UNKNOWN ERROR");
                                 return;
                             }
                         }else{
+                            LOG_F(ERROR,"UNKNOWN ERROR");
                             break;
                         }
                     }
                 }
                 else{
-                    //ERROR
+                    LOG_F(ERROR,"UNKNOWN ERROR");
                     break;
                 }
             }else if(function == PRINT){
@@ -147,7 +179,7 @@ void parse(vector<Token*>* tokens){
                 }
                 else if(token->type == IDENTIFIER){
                     if (parenthesis <= 0){
-                        //Missing parenthesis
+                        LOG_F(ERROR,"Parenthesis error");
                         break;
                     }else{
                         printer->addValue(token->value,token);
@@ -158,9 +190,10 @@ void parse(vector<Token*>* tokens){
                 else if(token->type == LINE_SEPARATOR){
                     if (parenthesis == 0 && printer->get("Value") != ""){
                         string a = printer->toString();
-                        windowReference->stdOutErr(printer->get("Value"));
+                        windowReference->stdOut1(printer->get("Value"));
                     }else{
-                        //ERROR
+                        LOG_F(ERROR,"UNKNOWN ERROR");
+                        return;
                     }
                 }
                 else if(token->type == ADDRESS){
@@ -168,7 +201,7 @@ void parse(vector<Token*>* tokens){
                 }else if(token->type == VALUE){
                     functions->push_back(VALUE);
                 }else{
-                    //ERROR
+                    LOG_F(ERROR,"UNKNOWN ERROR");
                     break;
                 }
             }
@@ -184,7 +217,8 @@ void parse(vector<Token*>* tokens){
             }
 
             else if (count != 1 && structure == nullptr){
-                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Wrong use of keyword <" + token->value +">\n");
+                string err = "Error in line" + to_string(token->line) + " : Wrong use of keyword <" + token->value +">";
+                LOG_F(ERROR,err.data());
                 return;
             }
             count *= token->type;
@@ -204,7 +238,6 @@ void parse(vector<Token*>* tokens){
             }else if (count % ASSIGNMENT == 0) {
                 string response = currentVar->addValue(token->value,token);
                 if (response != " "){
-                    windowReference->stdOutErr(response);
                     return;
                 }
             }else if(structure != nullptr && currentVar == nullptr) {
@@ -239,7 +272,8 @@ void parse(vector<Token*>* tokens){
             }
             else{
                 delete(currentVar);
-                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Assignment operator \"=\" out of context\n");
+                string err = ("Error in line" + to_string(token->line) + " : Assignment operator \"=\" out of context\n");
+                LOG_F(ERROR,err.data());
                 return;
             }
         }else if (token->type == LITERAL){
@@ -247,11 +281,11 @@ void parse(vector<Token*>* tokens){
                 count % (IDENTIFIER*ASSIGNMENT) == 0 || count % (FULL_REFERENCE*IDENTIFIER*ASSIGNMENT) == 0){
                 string response = currentVar->addValue(token->value,token);
                 if (response != " "){
-                    windowReference->stdOutErr(response);
                     return;
                 }
             }else{
-                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Literal <"+token->value + "> out of context\n");
+                string err ="Error in line" + to_string(token->line) + " : Literal <"+token->value + "> out of context\n";
+                LOG_F(ERROR,err.data());
                 return;
             }
 
@@ -287,7 +321,7 @@ void parse(vector<Token*>* tokens){
             if(currentVar != nullptr){
                 string response = currentVar->addValue(token->value,token);
                 if (response != " "){
-                    windowReference->stdOutErr(response);
+
                     return;
                 }
             }
@@ -295,14 +329,16 @@ void parse(vector<Token*>* tokens){
             if (count == REFERENCE){
                 count *= OPEN_REFERENCE_SEPARATOR;
             }else{
-                windowReference->stdOutErr("Error in line" + to_string(token->line) + " : Wrong use of \"<\"\n");
+                string err ="Error in line" + to_string(token->line) + " : Wrong use of \"<\"\n";
+                LOG_F(ERROR,err.data());
                 return;
             }
         }else if (token->type == CLOSE_REFERENCE_SEPARATOR){
             if (count == REFERENCE*OPEN_REFERENCE_SEPARATOR*DATA_TYPE){
                 count *= CLOSE_REFERENCE_SEPARATOR;
             }else{
-                windowReference->stdOutErr("Error in line" + to_string(token->line)+ " : Wrong use of \">\"\n");
+                string err ="Error in line" + to_string(token->line)+ " : Wrong use of \">\"\n";
+                LOG_F(ERROR,err.data());
                 return;
             }
         }else if(token->type == OPEN_SCOPE){
@@ -323,7 +359,8 @@ void parse(vector<Token*>* tokens){
         }
         else if(token->type == STRUCT){
             if (count != 1){
-                windowReference->stdOutErr("Error in line" + to_string(token->line)+ " : Wrong use of keyword <struct>\n");
+                string err = "Error in line" + to_string(token->line)+ " : Wrong use of keyword <struct>\n";
+                LOG_F(ERROR,err.data());
                 return;
             }
             count *= STRUCT;
@@ -340,19 +377,23 @@ void parse(vector<Token*>* tokens){
         }else if(token->type == VALUE) {
             functions->push_back(VALUE);
         } else{
-            windowReference->stdOutErr("Error in line" + to_string(token->line) + "\n");
+            string err = "Error in line" + to_string(token->line) + "\n";
+            LOG_F(ERROR,err.data());
             return;
         }
     }
     tokens->erase(tokens->begin(),tokens->begin()+tokensDropped);
     if (currentVar != nullptr && tokens->size() == 0) {
-        windowReference->stdOutErr("<;> missing : Unfinished variable\n");
+        string err = "<;> missing : Unfinished variable\n";
+        LOG_F(ERROR,err.data());
         return;
     }else if(currentScope != 0 && tokens->size() == 0){
-        windowReference->stdOutErr("<}> missing : Scope not closed\n");
+        string err = "<}> missing : Scope not closed\n";
+        LOG_F(ERROR,err.data());
         return;
     }else if(structure != nullptr){
-        windowReference->stdOutErr("<}> or <;> missing : Unfinished structure\n");
+        string err ="<}> or <;> missing : Unfinished structure\n";
+        LOG_F(ERROR,err.data());
         return;
     }
 

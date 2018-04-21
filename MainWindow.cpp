@@ -24,7 +24,7 @@ MainWindow::MainWindow(){
     QSplitter* horizontalSplitter = new QSplitter(Qt::Orientation::Horizontal);
 
     applicationLog->setStyleSheet("background-color:white;");
-    stdOut->setStyleSheet("background-color:white; color:red");
+    stdOut->setStyleSheet("background-color:white;");
     stdOut->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     stdOut->setMargin(10);
 
@@ -86,8 +86,12 @@ void MainWindow::callParser(){
     updateLiveView();
 }
 
-void MainWindow::stdOutErr(string err) {
+void MainWindow::stdOut1(string err) {
     stdOut->setText(stdOut->text() + QString::fromStdString(err));
+}
+
+void MainWindow::appLog(string err) {
+    applicationLog->setText(QString::fromStdString(err));
 }
 
 void MainWindow::updateLiveView() {
