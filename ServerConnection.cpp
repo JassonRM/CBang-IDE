@@ -47,7 +47,7 @@ QJsonDocument* ServerConnection::request(QJsonDocument *data) {
         QJsonDocument receivedData = QJsonDocument::fromJson(received.toUtf8());
 
 
-        while(!receivedData.isObject()){
+        while(!receivedData.isObject() && !receivedData.isArray()){
             socket->waitForReadyRead();
             received.append(socket->readAll());
             receivedData = QJsonDocument::fromJson(received.toUtf8());
