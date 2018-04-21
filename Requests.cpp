@@ -12,8 +12,9 @@ QJsonDocument* Requests::request(string identifier,string request){
     json->put("Identifier",identifier);
     QJsonDocument* document = new QJsonDocument(*json->get());
     delete (json);
-    document = (server->request(document));
-    return document;
+    QJsonDocument* response = (server->request(document));
+    delete(document);
+    return response;
 }
 
 bool Requests::isVariable(string identifier) {
@@ -137,7 +138,7 @@ Json* Requests::newVariable(Json *request) {
 Json* Requests::defineStruct(JsonArray *request) {
     request->put("Request","Define Struct");
     QJsonDocument* document = new QJsonDocument(*request->get());
-    document = (server->request(document));
+    server->request(document);
     return nullptr;
 }
 
@@ -146,6 +147,5 @@ void Requests::closeScope(int scope) {
     json->put("Request", "Close Scope");
     json->put("Scope", scope);
     QJsonDocument *document = new QJsonDocument(*json->get());
-    delete (json);
-    document = (server->request(document));
+    server->request(document);
 }
