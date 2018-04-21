@@ -4,6 +4,7 @@
 
 #include "Json.h"
 #include "Requests.h"
+#include <stdlib.h>
 void Json::put(string key,string value){
     QJsonValue *jsonValue = new QJsonValue(QString::fromStdString(value));
     this->json->insert(QString::fromStdString(key),*jsonValue);
@@ -53,8 +54,9 @@ string Json::addValue(string value, Token* token){
     string response = " ";
     if (token->type == IDENTIFIER){
         Json* var = Requests::variableValue(token->value);
+
         if(this->get("Type") == ""){
-            this->put("Type",var->get("Value"));
+            this->put("Type",var->get("Type"));
         }
 
         if (var->get("Value") == ""){
@@ -78,7 +80,7 @@ string Json::addValue(string value, Token* token){
             }
         } else if (this->get("Type") == "int") {
             try {
-                int value = boost::lexical_cast<int>(value);
+                boost::lexical_cast<int>(value);
             } catch (boost::bad_lexical_cast) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
                            "\" is not of type int\n";
@@ -101,9 +103,9 @@ string Json::addValue(string value, Token* token){
                 return response;
             }
         } else if (this->get("Type") == "char") {
-            if (!regex_match(value, regex("\'[A-Za-z]\'"))) {
+            if (!regex_match(value, regex("\'.\'"))) {
                 response = "Error in line" + to_string(token->line) + " : Variable \"" + this->get("Identifier") +
-                           "\" is not of type double\n";
+                           "\" is not of type char\n";
                 return response;
             }
 
@@ -160,4 +162,33 @@ string Json::addValue(string value, tokenType type){
 
 string Json::addValueUnchecked(string value){
     this->put("Value", this->get("Value").append(value));
+}
+
+void Json::arithmeticSolver(){
+
+    if (this->get("Type") == "int"){
+        if (this->get("Value") != ""){
+            int value = (int)te_interp(this->get("Value").data(),0);
+            this->put("Value",value);
+        }
+    }
+    else if (this->get("Type") == "double"){
+        if (this->get("Value") != ""){
+            double value = boost::lexical_cast<double>(this->get("Value"));
+            this->put("Value",value);
+        }
+    }
+    else if (this->get("Type") == "float"){
+        if (this->get("Value") != ""){
+            float value = std::stof(this->get("Value"));
+            cout <<this->get("Value");
+            this->put("Value",value);
+        }
+    }
+    else if (this->get("Type") == "long"){
+        if (this->get("Value") != ""){
+            long value = (long)te_interp(this->get("Value").data(),0);
+            this->put("Value",value);
+        }
+    }else{};
 }

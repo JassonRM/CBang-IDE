@@ -50,11 +50,11 @@ QJsonDocument* ServerConnection::request(QJsonDocument *data) {
         while(!receivedData.isObject()){
             socket->waitForReadyRead();
             received.append(socket->readAll());
+            receivedData = QJsonDocument::fromJson(received.toUtf8());
         }
 
-        QJsonDocument* receivedDataPtr = new QJsonDocument;
-        receivedDataPtr->fromJson(received.toUtf8());
-
+        QJsonDocument* receivedDataPtr = new QJsonDocument(receivedData);
+        //std::cout <<receivedDataPtr->toJson().toStdString()<<std::endl;
         return receivedDataPtr;
     }
 }

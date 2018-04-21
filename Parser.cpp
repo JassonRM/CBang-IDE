@@ -157,6 +157,7 @@ void parse(vector<Token*>* tokens){
                 }
                 else if(token->type == LINE_SEPARATOR){
                     if (parenthesis == 0 && printer->get("Value") != ""){
+                        string a = printer->toString();
                         windowReference->stdOutErr(printer->get("Value"));
                     }else{
                         //ERROR
@@ -264,7 +265,6 @@ void parse(vector<Token*>* tokens){
                 structure = nullptr;
             }
             else if(printing){
-                printing = false;
                 cout << printer->toString()<< endl;
                 delete(printer);
                 printer = nullptr;

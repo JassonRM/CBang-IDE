@@ -35,38 +35,54 @@ bool Requests::isStruct(string identifier) {
 
 string Requests::variableType(string identifier){
     QJsonDocument* document = request(identifier, "Get Type");
-    QJsonValue value = document->object().value("Type");
-    if (value.isUndefined()){
-        return " ";
-    }
-    return value.toString().toStdString();
+    string value = document->object().value("Type").toString(" ").toStdString();
+    return value;
 }
 
 Json* Requests::variableValue(string identifier) {
-    QJsonDocument* document = request(identifier, "Get Value");
-    QJsonValue value = document->object().value("Value");
-    QJsonValue type = document->object().value("Type");
-    if (value.isUndefined()){
-        return nullptr;
-    }
     Json* json = new Json();
+
+    QJsonDocument* document = request(identifier, "Get Value");
+    string type = document->object().value("Type").toString("").toStdString();
+    if(type == ""){
+        return nullptr;
+    } else if (type == "int"){
+        int value = document->object().value("Value").toInt();
+        json->put("Value",std::to_string(value));
+    }
+    else if(type == "char"){
+        string value = document->object().value("Value").toString().toStdString();
+        json->put("Value",value);
+    }
+    else if(type == "double"){
+        double value = document->object().value("Value").toDouble();
+        json->put("Value",std::to_string(value));
+    }
+    else if(type == "float"){
+        float value = (float)document->object().value("Value").toDouble();
+        json->put("Value",std::to_string(value));
+    }
+    else if(type == "long"){
+        long value = boost::lexical_cast<long>(document->object().value("Value").toString().toStdString());
+        json->put("Value",std::to_string(value));
+    }
     json->put("Identifier",identifier);
-    json->putJsonValue("Value",value);
-    json->putJsonValue("Type",type);
+    json->put("Type",type);
+    string a = json->toString();
     return json;
 
 }
 Json* Requests::variableAddress(string identifier){
     QJsonDocument* document = request(identifier, "Get Address");
-    QJsonValue address = document->object().value("Address");
-    QJsonValue type = document->object().value("Type");
-    if (address.isUndefined()){
+    int address = document->object().value("Address").toInt(-1);
+    string type = document->object().value("Type").toString().toStdString();
+    if (address == -1){
         return nullptr;
     }
     Json* json = new Json();
     json->put("Identifier",identifier);
-    json->putJsonValue("Address",address);
-    json->putJsonValue("Type",type);
+    json->put("Address",to_string(address));
+    json->put("Type",type);
     return json;
 }
 
@@ -84,37 +100,11 @@ Json* Requests::referenceValue(string identifier){
     return json;
     }
 
-void arithmeticSolver(Json* request){
-    if (request->get("Type") == "int"){
-        if (request->get("Value") != ""){
-            int value = (int)te_interp(request->get("Value").data(),0);
-            request->put("Value",value);
-        }
-    }
-    else if (request->get("Type") == "double"){
-        if (request->get("Value") != ""){
-            double value = te_interp(request->get("Value").data(),0);
-            request->put("Value",value);
-        }
-    }
-    else if (request->get("Type") == "float"){
-        if (request->get("Value") != ""){
-            float value = (float)(request->get("Value").data(),0);
-            request->put("Value",value);
-        }
-    }
-    else if (request->get("Type") == "long"){
-        if (request->get("Value") != ""){
-            long value = (long)(request->get("Value").data(),0);
-            request->put("Value",value);
-        }
-    }else{};
-}
 
 Json* Requests::newVariable(Json *request) {
     string type = request->get("Type");
     if (request->get("Request") == "Change Value"){
-        arithmeticSolver(request);
+        request->arithmeticSolver();
     }else if(request->get("Struct") == "true"){
         request->get()->remove("Struct");
         if (request->get("Value") == ""){
@@ -127,7 +117,7 @@ Json* Requests::newVariable(Json *request) {
         request->put("Request", "New Reference");
     }else{
         request->put("Request","New Variable");
-        arithmeticSolver(request);
+        request->arithmeticSolver();
     }
 
     QJsonDocument* document = new QJsonDocument(*request->get());

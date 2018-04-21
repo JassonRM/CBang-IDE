@@ -89,6 +89,8 @@ public:
 
     string addValueUnchecked(string value);
 
+    void arithmeticSolver();
+
 };
 
 #endif //CODEPARSER_VARIABLE_H

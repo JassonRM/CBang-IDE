@@ -5,6 +5,7 @@
 #include "JsonArray.h"
 
 void JsonArray::add(Json* var){
+    var->arithmeticSolver();
     QJsonValue value = QJsonValue(*var->get());
     this->variables->append(value);
 }
