@@ -6,7 +6,7 @@
 
 MainWindow::MainWindow(){
 
-    tableView = new QTableView();
+    tableWidget = new QTableWidget();
     centralWidget = new QWidget();
     vLayout = new QVBoxLayout();
     applicationLog = new QLabel();
@@ -40,7 +40,7 @@ MainWindow::MainWindow(){
     verticalSplitter->addWidget(area1);
     verticalSplitter->addWidget(area2);
     horizontalSplitter->addWidget(verticalSplitter);
-    horizontalSplitter->addWidget(tableView);
+    horizontalSplitter->addWidget(tableWidget);
 
     vLayout->addWidget(horizontalSplitter);
 
@@ -63,17 +63,72 @@ MainWindow::MainWindow(){
     toolbar->addAction("Step",this,SLOT(callStepper()));
     this->resize(windowWidth,windowHeight);
     this->editor->setFocus();
+
+
+    //RAM Live View
+    tableWidget->setColumnCount(4);
+
+    QStringList labels;
+    labels<<"Address"<<"Identifier"<<"Value"<<"References";
+    tableWidget->setHorizontalHeaderLabels(labels);
+
+
 }
 
 void MainWindow::callStepper(){
     step();
+    updateLiveView();
 }
 
 void MainWindow::callParser(){
     string code = editor->toPlainText().toStdString();
     parseString(code,this);
+    updateLiveView();
 }
 
 void MainWindow::stdOutErr(string err) {
     stdOut->setText(stdOut->text() + QString::fromStdString(err));
+}
+
+void MainWindow::updateLiveView() {
+    QString request = "{\"Request\":\"RAM Status\"}";
+    QJsonDocument jsonRequest = QJsonDocument::fromJson(request.toUtf8());
+
+    std::cout << jsonRequest.toJson().data() << std::endl;
+
+
+    ServerConnection *server = ServerConnection::getServerConnection();
+    QJsonDocument *response = server->request(&jsonRequest);
+
+    QJsonArray array = response->array();
+
+    for(int row = 0; row < response->array().size(); row++){
+        tableWidget->setRowCount(row + 1);
+        QTableWidgetItem *address = new QTableWidgetItem(1);
+        address->setText(QString::number(array.at(row).toObject()["Address"].toInt()));
+        tableWidget->setItem(row, 0, address);
+
+        QTableWidgetItem *identifier = new QTableWidgetItem(2);
+        identifier->setText(array.at(row).toObject()["Identifier"].toString());
+        tableWidget->setItem(row, 1, identifier);
+
+        QTableWidgetItem *value = new QTableWidgetItem(3);
+
+        QString type = array.at(row).toObject()["Type"].toString();
+        if(type == "int" || type == "reference"){
+            value->setText(QString::number(array.at(row).toObject()["Value"].toInt()));
+        }else if(type == "long" || type == "double" || type == "float"){
+            value->setText(QString::number(array.at(row).toObject()["Value"].toDouble()));
+        }else if(type == "char"){
+            value->setText(array.at(row).toObject()["Value"].toString().at(0));
+        }
+
+        tableWidget->setItem(row, 2, value);
+
+        QTableWidgetItem *references = new QTableWidgetItem(1);
+        references->setText(QString::number(array.at(row).toObject()["References"].toInt()));
+        tableWidget->setItem(row, 3, references);
+    }
+
+    std::cout<<response->toJson().toStdString()<<std::endl;
 }

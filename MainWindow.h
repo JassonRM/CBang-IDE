@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow();
     void stdOutErr(string err);
+    void updateLiveView();
 
 private slots:
     void callParser();
@@ -33,7 +34,7 @@ private:
 
     QLabel* applicationLog;
 
-    QTableView* tableView;
+    QTableWidget* tableWidget;
 
     QToolBar* toolbar;
 
