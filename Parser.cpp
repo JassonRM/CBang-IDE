@@ -7,11 +7,8 @@
 
 vector<Token*>* tokens = nullptr;
 
-void parseString(string code, MainWindow* window){
-    windowReference = window;
-    tokens = lex(code);
-    parse(tokens);
-    QFile file("/home/marco/everything.log");
+string readFile(string fileName){
+    QFile file(QString::fromStdString(fileName));
     file.open(QIODevice::ReadOnly);
     string response;
     while (!file.atEnd()) {
@@ -26,24 +23,21 @@ void parseString(string code, MainWindow* window){
     file.close();
 }
 
+void parseString(string code, MainWindow* window){
+    Requests::reset();
+    windowReference = window;
+    tokens = lex(code);
+    parse(tokens);
+    readFile("/home/marco/everything.log");
+
+}
+
 void step(){
     if (tokens == nullptr){
         return;
     }
     parse(tokens);
-    QFile file("/home/marco/everything.log");
-    file.open(QIODevice::ReadOnly);
-    string response;
-    while (!file.atEnd()) {
-        QByteArray line = file.readLine();
-        if (line == "\n"){
-            continue;
-        }
-        response.append(line);
-        response.append("\n");
-    }
-    windowReference->appLog(response);
-    file.close();
+    readFile("/home/marco/everything.log");
 
 }
 

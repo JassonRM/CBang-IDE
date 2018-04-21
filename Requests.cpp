@@ -140,3 +140,12 @@ void Requests::closeScope(int scope) {
     QJsonDocument *document = new QJsonDocument(*json->get());
     server->request(document);
 }
+
+void Requests::reset() {
+    Json* json = new Json();
+    json->put("Request","Reset");
+    QJsonDocument* document = new QJsonDocument(*json->get());
+    delete (json);
+    QJsonDocument* response = (server->request(document));
+    delete(document);
+}
