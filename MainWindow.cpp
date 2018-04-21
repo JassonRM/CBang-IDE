@@ -124,7 +124,8 @@ void MainWindow::updateLiveView() {
         }else if(type == "long" || type == "double" || type == "float"){
             value->setText(QString::number(array.at(row).toObject()["Value"].toDouble()));
         }else if(type == "char"){
-            value->setText(array.at(row).toObject()["Value"].toString());
+            char charvalue = array.at(row).toObject()["Value"].toInt();
+            value->setText(QString::fromUtf8(&charvalue, 1));
         }
 
         tableWidget->setItem(row, 2, value);
