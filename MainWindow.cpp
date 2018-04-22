@@ -81,13 +81,14 @@ void MainWindow::callStepper(){
 }
 
 void MainWindow::callParser(){
+    Requests::reset();
     string code = editor->toPlainText().toStdString();
     parseString(code,this);
     updateLiveView();
 }
 
 void MainWindow::stdOut1(string err) {
-    stdOut->setText(stdOut->text() + QString::fromStdString(err));
+    stdOut->setText(stdOut->text() + QString::fromStdString(err) + "\n");
 }
 
 void MainWindow::appLog(string err) {

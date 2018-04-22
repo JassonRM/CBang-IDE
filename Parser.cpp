@@ -24,11 +24,10 @@ string readFile(string fileName){
 }
 
 void parseString(string code, MainWindow* window){
-    Requests::reset();
     windowReference = window;
     tokens = lex(code);
     parse(tokens);
-    readFile("/home/marco/everything.log");
+//    readFile("/Users/Jai/everything.log");
 
 }
 
@@ -37,7 +36,7 @@ void step(){
         return;
     }
     parse(tokens);
-    readFile("/home/marco/everything.log");
+//    readFile("/Users/Jai/everything.log");
 
 }
 
